@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chemistry Cosmetics Lab</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* 기본 배경 설정 (핑크핑크 여리여리) */
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Noto Sans KR', sans-serif;
+            background: linear-gradient(135deg, #fff0f5 0%, #ffc0cb 100%);
+            display: flex;
+            height: 100vh;
+            color: #555;
+        }
+
+        /* 1. 중앙 캐릭터 영역 */
+        #character-area {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        #character-img {
+            max-height: 90vh;
+            max-width: 100%;
+            object-fit: contain;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+            z-index: 1;
+        }
+
+        /* 얼굴에 화장품 적용 시 반짝이는 이펙트 (원본 이미지는 변형 안함) */
+        #sparkle-effect {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 2;
+            background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 60%);
+            opacity: 0;
+            transition: opacity 0.5s ease-out;
+            mix-blend-mode: overlay;
+        }
+
+        /* 2. 우측 진열장 (글래스모피즘 디자인) */
+        #shelf-container {
+            width: 380px;
+            height: 90vh;
+            margin: 5vh 20px;
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(255, 182, 193, 0.3);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+            z-index: 10;
+        }
+
+        h2 {
+            text-align: center;
+            color: #d63384;
+            margin-top: 0;
+            font-size: 24px;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+        }
+
+        .shelf-row {
+            flex: 1;
+            border-bottom: 2px solid rgba(255,255,255,0.5);
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+        .shelf-row::after {
+            content: ' ';
+            position: absolute;
+            bottom: -5px; left: 0; width: 100%; height: 5px;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.8), rgba(255,255,255,0));
+        }
+        .shelf-row:last-child { border-bottom: none; }
+        .shelf-title {
+            position: absolute; top: -10px; left: 5px;
+            font-size: 12px; color: #d63384; font-weight: bold;
+        }
+
+        /* 화장품 아이템 버튼 */
+        .cosmetic-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .cosmetic-item:hover {
+            transform: scale(1.15) translateY(-5px);
+        }
+        .item-label {
+            font-size: 11px;
+            margin-top: 8px;
+            font-weight: bold;
+            color: #444;
+            text-align: center;
+            background: rgba(255,255,255,0.7);
+            padding: 2px 5px;
+            border-radius: 5px;
+        }
+
+        /* 화장품 CSS 모형 디자인 */
+        .model { position: relative; }
+        
+        /* 토너 (건성) */
+        .m-toner { width: 30px; height: 65px; background: rgba(173, 216, 230, 0.6); border-radius: 5px; border: 1px solid #fff; }
+        .m-toner::before { content:''; position:absolute; top:-12px; left:5px; width:20px; height:12px; background: #eee; border-radius: 3px 3px 0 0; }
+        
+        /* 앰플 (지성) */
+        .m-ampoule { width: 35px; height: 40px; background: rgba(255, 182, 193, 0.7); border-radius: 50% 50% 10px 10px; bottom: 0; border: 1px solid #fff; margin-top: 20px;}
+        .m-ampoule::before { content:''; position:absolute; top:-18px; left:12px; width:10px; height:18px; background: silver; }
+        .m-ampoule::after { content:''; position:absolute; top:-25px; left:10px; width:14px; height:10px; background: #fff; border-radius: 10px 10px 0 0;}
+        
+        /* 세럼 (진정) */
+        .m-serum { width: 28px; height: 50px; background: rgba(144, 238, 144, 0.6); border-radius: 8px; border: 1px solid #fff; margin-top:10px;}
+        .m-serum::before { content:''; position:absolute; top:-15px; left:7px; width:14px; height:15px; background: #fdfdfd; border-radius: 5px 5px 0 0;}
+
+        /* 파운데이션 */
+        .m-foundation { width: 35px; height: 45px; background: rgba(245, 222, 179, 0.9); border-radius: 5px; border: 2px solid rgba(255,255,255,0.8); margin-top:15px;}
+        .m-foundation::before { content:''; position:absolute; top:-12px; left:7px; width:20px; height:12px; background: #333; border-radius: 2px;}
+
+        /* 팔레트 */
+        .m-palette { width: 50px; height: 35px; background: #333; border-radius: 5px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2px; padding: 4px; box-sizing: border-box; margin-top: 25px;}
+        .m-palette div { background: #d2a679; border-radius: 2px; }
+        .m-palette div:nth-child(2) { background: #cd853f; }
+        .m-palette div:nth-child(3) { background: #a0522d; }
+        .m-palette div:nth-child(4) { background: #ffb6c1; }
+        .m-palette div:nth-child(5) { background: #ff69b4; }
+        .m-palette div:nth-child(6) { background: #c71585; }
+
+        /* 립스틱 */
+        .m-lipstick { width: 16px; height: 30px; background: gold; border-radius: 2px; margin-top:30px;}
+        .m-lipstick::before { content:''; position:absolute; top:-15px; left:2px; width:12px; height:15px; background: #dc143c; border-radius: 10px 10px 0 0; }
+        .m-lipstick::after { content:''; position:absolute; top:30px; left:0; width:16px; height:15px; background: #222; }
+
+        /* 픽서 */
+        .m-fixer { width: 25px; height: 60px; background: rgba(230, 230, 250, 0.8); border-radius: 10px; border: 1px solid #fff; }
+        .m-fixer::before { content:''; position:absolute; top:-12px; left:5px; width:15px; height:12px; background: #eee; }
+        .m-fixer::after { content:''; position:absolute; top:-10px; left:-5px; width:10px; height:5px; background: #ccc; border-radius: 5px; transform: rotate(-20deg);}
+
+        /* 마스카라, 라이너 등 기본템 */
+        .m-mascara { width: 12px; height: 50px; background: #111; border-radius: 10px; margin-top:10px;}
+        .m-brush { width: 4px; height: 40px; background: #333; margin-top:20px;}
+        .m-brush::before { content:''; position:absolute; top:-10px; left:-4px; width:12px; height:15px; background: #8b4513; border-radius: 50%; }
+
+        /* 3. 화학 제조 애니메이션 모달 */
+        #craft-modal {
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(5px);
+            display: none; justify-content: center; align-items: center; z-index: 100;
+        }
+        .modal-content {
+            background: white; width: 600px; padding: 30px;
+            border-radius: 20px; text-align: center;
+            box-shadow: 0 10px 40px rgba(255, 105, 180, 0.4);
+            border: 3px solid #ffb6c1;
+        }
+        .animation-box {
+            width: 100%; height: 250px; background: #f8f9fa;
+            border-radius: 15px; margin-bottom: 20px;
+            position: relative; overflow: hidden;
+            border: 2px dashed #ffc0cb;
+        }
+        #chem-text {
+            font-size: 16px; line-height: 1.6; color: #333;
+            min-height: 80px;
+        }
+        .apply-btn {
+            background: #d63384; color: white; border: none;
+            padding: 12px 30px; font-size: 18px; border-radius: 30px;
+            cursor: pointer; font-weight: bold; margin-top: 10px;
+            transition: 0.3s; display: none;
+        }
+        .apply-btn:hover { background: #ff1493; transform: scale(1.05); }
+
+        /* 화학 반응 애니메이션 CSS */
+        @keyframes float { 0% { transform: translateY(0); } 50% { transform: translateY(-20px); } 100% { transform: translateY(0); } }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes dissolve { to { opacity: 0; transform: scale(2); } }
+        @keyframes mix { 0% { left: 10%; } 50% { left: 45%; transform: scale(1.2); } 100% { left: 45%; } }
+        
+        .molecule { position: absolute; font-weight: bold; font-size: 14px; padding: 5px 10px; border-radius: 20px; color: white; display: flex; align-items: center; justify-content: center;}
+        
+        /* 하단 대화창 (스토리텔링용) */
+        #dialogue-box {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            width: 700px; background: rgba(255, 255, 255, 0.9);
+            padding: 20px; border-radius: 15px; border: 2px solid #ffb3c6;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            font-size: 18px; font-weight: bold; color: #444; z-index: 50;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 중앙 캐릭터 영역 -->
+    <div id="character-area">
+        <div id="sparkle-effect"></div>
+        <!-- 사용자 제공 이미지 연결 (파일명 변형 없음) -->
+        <img id="character-img" src="Gemini_Generated_Image_s8bvoas8bvoas8bv (1).png" alt="캐릭터 사진">
+    </div>
+
+    <!-- 우측 화장품 진열장 -->
+    <div id="shelf-container">
+        <h2>화장품 제조실 🧪</h2>
+        
+        <!-- 스킨케어 층 -->
+        <div class="shelf-row">
+            <div class="shelf-title">Skincare (기능별 화학구조)</div>
+            <div class="cosmetic-item" onclick="startCrafting('toner')">
+                <div class="model m-toner"></div>
+                <div class="item-label">건성 토너<br>(세라마이드)</div>
+            </div>
+            <div class="cosmetic-item" onclick="startCrafting('ampoule')">
+                <div class="model m-ampoule"></div>
+                <div class="item-label">지성 앰플<br>(BHA 피지용해)</div>
+            </div>
+            <div class="cosmetic-item" onclick="startCrafting('serum')">
+                <div class="model m-serum"></div>
+                <div class="item-label">진정 세럼<br>(흡열 반응)</div>
+            </div>
+        </div>
+
+        <!-- 메이크업 층 -->
+        <div class="shelf-row">
+            <div class="shelf-title">Base & Color (유화 및 무기안료)</div>
+            <div class="cosmetic-item" onclick="startCrafting('foundation')">
+                <div class="model m-foundation"></div>
+                <div class="item-label">파운데이션<br>(계면활성제)</div>
+            </div>
+            <div class="cosmetic-item" onclick="startCrafting('palette')">
+                <div class="model m-palette"><div></div><div></div><div></div><div></div><div></div><div></div></div>
+                <div class="item-label">아이팔레트<br>(색채 화학)</div>
+            </div>
+            <div class="cosmetic-item" onclick="startCrafting('lipstick')">
+                <div class="model m-lipstick"></div>
+                <div class="item-label">립스틱<br>(농도 배합)</div>
+            </div>
+        </div>
+
+        <!-- 픽서 및 기본템 층 -->
+        <div class="shelf-row">
+            <div class="shelf-title">Fixer & Basics (기본템)</div>
+            <div class="cosmetic-item" onclick="startCrafting('fixer')">
+                <div class="model m-fixer"></div>
+                <div class="item-label">메이크업 픽서<br>(폴리머)</div>
+            </div>
+            <div class="cosmetic-item" onclick="applyBasic('마스카라 & 애교살 라이너')">
+                <div class="model m-mascara"></div>
+                <div class="item-label">아이메이크업</div>
+            </div>
+            <div class="cosmetic-item" onclick="applyBasic('눈썹 & 블러셔')">
+                <div class="model m-brush"></div>
+                <div class="item-label">눈썹/블러셔</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 화학 제조 모달창 -->
+    <div id="craft-modal">
+        <div class="modal-content">
+            <h2 id="modal-title" style="color:#d63384; font-size: 28px;">제조 중...</h2>
+            <div class="animation-box" id="anim-box">
+                <!-- 자바스크립트로 화학 애니메이션 요소가 주입됩니다 -->
+            </div>
+            <div id="chem-text"></div>
+            <button class="apply-btn" id="apply-btn" onclick="finishCrafting()">화장품 적용하기</button>
+        </div>
+    </div>
+
+    <!-- 하단 스토리텔링 대화창 -->
+    <div id="dialogue-box"></div>
+
+    <script>
+        const modal = document.getElementById('craft-modal');
+        const animBox = document.getElementById('anim-box');
+        const chemText = document.getElementById('chem-text');
+        const applyBtn = document.getElementById('apply-btn');
+        const dialogue = document.getElementById('dialogue-box');
+        const sparkle = document.getElementById('sparkle-effect');
+        let currentCosmetic = '';
+
+        const db = {
+            'toner': {
+                title: '건성용 스킨케어 (보습막 형성)',
+                animHtml: `
+                    <div class="molecule" style="background:#87CEEB; top:40%; left:20%; animation: float 3s infinite;">💦 수분</div>
+                    <div class="molecule" style="background:#FFD700; top:40%; right:20%; width:60px; height:60px; border-radius:5px; animation: float 4s infinite;">세라마이드</div>
+                    <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); font-size:30px;">➕</div>
+                `,
+                text: "건성 피부를 위한 스킨케어 제조 중!<br>피부 지질 장벽을 모사한 <b>세라마이드(Ceramide)</b> 분자가 틈을 메워 수분 증발을 막는 결합을 형성합니다."
+            },
+            'ampoule': {
+                title: '지성용 스킨케어 (피지 용해)',
+                animHtml: `
+                    <div class="molecule" style="background:#FFA500; top:40%; left:40%; width:80px; height:80px; border-radius:50%; animation: dissolve 3s forwards;">피지(기름)</div>
+                    <div class="molecule" style="background:#32CD32; top:20%; left:20%; animation: float 2s infinite;">BHA 분자 (지용성)</div>
+                `,
+                text: "지성 피부를 위한 앰플 제조 중!<br>기름과 친한 <b>지용성 BHA(살리실산)</b> 분자가 모공 속 뭉친 피지(기름)를 녹여내는 화학 반응이 일어납니다."
+            },
+            'serum': {
+                title: '피부 진정 세럼 (흡열 반응)',
+                animHtml: `
+                    <div style="position:absolute; bottom:20px; left:40%; font-size:50px; animation: float 2s infinite;">🔥피부열</div>
+                    <div class="molecule" style="background:#00FFFF; top:10px; left:40%; color:#000;">멘톨/에리스리톨 배합</div>
+                    <div style="position:absolute; top:40%; left:30%; font-size:40px; animation: float 1s infinite; opacity:0.5;">❄️증발❄️</div>
+                `,
+                text: "열감을 내려주는 진정 세럼 제조 중!<br>성분이 증발하면서 주변의 열을 빼앗아가는 <b>흡열 반응</b>을 이용하여 즉각적으로 피부 온도를 낮춥니다."
+            },
+            'foundation': {
+                title: '파운데이션 (에멀전과 계면활성제)',
+                animHtml: `
+                    <div class="molecule" style="background:#FFD700; top:40%; left:10%; border-radius:50%; animation: mix 2s forwards;">기름(오일)</div>
+                    <div class="molecule" style="background:#1E90FF; top:40%; right:10%; border-radius:50%; animation: mix 2s forwards reverse;">물(수분)</div>
+                    <div class="molecule" style="background:#9370DB; top:10%; left:40%; width:100px;">계면활성제<br>⚪친수성머리<br>〰️친유성꼬리</div>
+                `,
+                text: "발표에서 다뤘던 파운데이션의 원리!<br>파운데이션은 기름 베이스야. <b>계면활성제</b>를 넣어 물과 기름을 섞은 W/O(Water in Oil) 에멀전을 만듭니다.<br><span style='color:#d63384'>※ 클렌징할 땐 친유성 꼬리가 화장을 감싸고 친수성 머리가 물에 씻겨가는 미셀(Micelle) 구조가 필요해!</span>"
+            },
+            'palette': {
+                title: '아이팔레트 (색채 화학)',
+                animHtml: `
+                    <div class="molecule" style="background:#8B0000; top:40%; left:20%;">Fe₂O₃(적색 산화철)</div>
+                    <div class="molecule" style="background:#A0522D; top:40%; right:20%;">+ 다양한 무기 안료</div>
+                `,
+                text: "아이팔레트 색상 조색 중!<br>화장품의 색은 화학적으로 <b>무기 안료(산화철 등)</b>의 산화도와 입자 크기를 조절하여 빚어냅니다."
+            },
+            'lipstick': {
+                title: '립스틱 (농도와 색 조합)',
+                animHtml: `
+                    <div class="molecule" style="background:#FF0000; top:40%; left:10%;">적색 안료</div>
+                    <div class="molecule" style="background:#FFFFFF; color:#000; top:40%; left:40%;">TiO₂(티타늄디옥사이드)</div>
+                    <div style="position:absolute; top:40%; left:75%; font-size:30px;">➡️ 🌸핑크</div>
+                `,
+                text: "립스틱 제조 중!<br>적색 안료에 하얀색을 띠는 <b>티타늄 디옥사이드(TiO₂)</b>의 농도를 화학적으로 미세하게 조절하여 완벽한 여리여리 핑크색을 조합합니다."
+            },
+            'fixer': {
+                title: '메이크업 픽서 (고분자 폴리머)',
+                animHtml: `
+                    <div style="position:absolute; top:20px; left:20%; border: 2px dashed #9370DB; width: 60%; height: 80%; display:grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap:5px;">
+                        <div style="background:rgba(147, 112, 219, 0.3);">화장입자</div><div style="background:rgba(147, 112, 219, 0.3);">화장입자</div>
+                        <div style="background:rgba(147, 112, 219, 0.3);">화장입자</div><div style="background:rgba(147, 112, 219, 0.3);">화장입자</div>
+                    </div>
+                    <div style="position:absolute; top:50%; left:40%; font-weight:bold; color:#d63384; font-size:20px; background:#fff; padding:5px;">폴리머 그물망</div>
+                `,
+                text: "화장을 고정하는 픽서 분사!<br>얼굴에 미세한 <b>고분자(Polymers)</b>들이 뿌려지며 서로 얽혀, 화장품 입자 위로 투명한 방어막(Cross-linked mesh)을 형성하여 고정시킵니다."
+            }
+        };
+
+        function startCrafting(itemKey) {
+            currentCosmetic = itemKey;
+            const data = db[itemKey];
+            
+            document.getElementById('modal-title').innerText = data.title;
+            animBox.innerHTML = data.animHtml;
+            chemText.innerHTML = '';
+            applyBtn.style.display = 'none';
+            modal.style.display = 'flex';
+
+            // 타이핑 효과
+            let i = 0;
+            const speed = 30; // 타이핑 속도
+            const textToType = data.text;
+            
+            function typeWriter() {
+                if (i < textToType.length) {
+                    if(textToType.charAt(i) === '<') {
+                        let tag = "";
+                        while(textToType.charAt(i) !== '>') {
+                            tag += textToType.charAt(i);
+                            i++;
+                        }
+                        tag += '>';
+                        chemText.innerHTML += tag;
+                        i++;
+                    } else {
+                        chemText.innerHTML += textToType.charAt(i);
+                        i++;
+                    }
+                    setTimeout(typeWriter, speed);
+                } else {
+                    applyBtn.style.display = 'inline-block';
+                }
+            }
+            setTimeout(typeWriter, 500);
+        }
+
+        function finishCrafting() {
+            modal.style.display = 'none';
+            showDialogue("화학적 제조가 완료된 <b>" + db[currentCosmetic].title.split(' ')[0] + "</b>(을)를 얼굴에 적용했습니다!");
+            triggerSparkle();
+        }
+
+        function applyBasic(name) {
+            showDialogue("기본 화장품 <b>[" + name + "]</b>(을)를 캐릭터에 바로 사용했습니다! (생성 과정 생략)");
+            triggerSparkle();
+        }
+
+        function showDialogue(text) {
+            dialogue.innerHTML = text;
+            dialogue.style.display = 'block';
+            setTimeout(() => { dialogue.style.display = 'none'; }, 4000);
+        }
+
+        function triggerSparkle() {
+            sparkle.style.opacity = '1';
+            setTimeout(() => { sparkle.style.opacity = '0'; }, 1000);
+        }
+    </script>
+</body>
+</html>
